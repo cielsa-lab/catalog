@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Laboratorio MAC Santa Fe | Catálogo de estudios</title>
+    
+    <!-- Fuentes e iconos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Estilos propios -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="hero">
+        <img src="media/img/logo_mac_bueno.png" alt="Imagen de laboratorio clínico" class="lab-logo_mobile">
+        <h1><i class="fas fa-flask"></i> Laboratorio MAC Santa Fe</h1>
+        <h2>Catálogo de estudios para</h2>
+        <h2>pacientes particulares externos</h2>
+        <img src="media/img/logo_mac_bueno.png" alt="Imagen de laboratorio clínico" class="lab-logo">
+        <div class="hero-sub">Consulta tus estudios de manera individual, perfiles y preparaciones</div>
+        <div class="badge-info"><i class="fas fa-microscope"></i>Atención continua para tu salud, disponible las 24 horas del día</div>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn" data-tab="packages"><i class="fas fa-boxes"></i> Paquetes y Perfiles</button>
+        <button class="tab-btn active" data-tab="individual"><i class="fas fa-vial"></i> Estudios Individuales</button>
+        <button class="tab-btn" data-tab="prep"><i class="fas fa-clipboard-list"></i> Indicaciones Generales</button>
+        <button class="tab-btn" data-tab="appointment"><i class="fas fa-calendar-check"></i> Cotiza y Agenda Cita</button>
+    </div>
+
+    <div class="container">
+        <div class="search-wrapper">
+            <input type="text" id="globalSearch" class="search-input" placeholder="🔎 Buscar estudio o paquete... (ej. Glucosa, Perfil Hepático, TSH)" autocomplete="off">
+        </div>
+        <div id="individualTab" class="tab-content active">
+            <div id="categoryFilter" class="category-filter"></div>
+            <div id="individualStudiesContainer"></div>
+            <div id="statsIndividual" class="stats-info"></div>
+        </div>
+        <div id="packagesTab" class="tab-content">
+            <div id="packageCategoryFilter" class="category-filter"></div>
+            <div id="packagesGridContainer" class="packages-grid"></div>
+            <div id="statsPackages" class="stats-info"></div>
+        </div>
+        <div id="prepTab" class="tab-content">
+            <div class="instructions-grid" id="instructionsDynamic"></div>
+            <div class="warning-box">
+                <i class="fas fa-exclamation-triangle"></i> 
+                <strong>Nota:</strong> El incumplimiento de las condiciones de preparación puede alterar los resultados.
+            </div>
+        </div>
+        <div id="appointmentTab" class="tab-content">
+            <div class="appointment-form-container">
+                <h3><i class="fas fa-file-medical"></i> Solicitud de estudios / Agendar cita</h3>
+                <p>Complete el siguiente formulario con sus datos y los estudios que desea realizarse. Un asesor le contactará para confirmar fecha y hora.</p>
+                
+                <!-- Lista de estudios seleccionados -->
+                <div class="selected-tests-section">
+                    <label><i class="fas fa-list"></i> Estudios solicitados:</label>
+                    <div id="selectedTestsList" class="selected-tests-list">
+                        <div class="empty-selected">No hay estudios seleccionados. Use el botón "Agregar estudios" para elegir.</div>
+                    </div>
+                    <button type="button" id="openStudySelectorBtn" class="btn-add-study"><i class="fas fa-plus-circle"></i> Agregar estudios</button>
+                </div>
+
+                <!-- Formulario de datos -->
+                <form id="appointmentForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Nombre completo *</label>
+                            <input type="text" id="patientName" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-phone-alt"></i> Teléfono *</label>
+                            <input type="tel" id="patientPhone" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-envelope"></i> Correo electrónico *</label>
+                            <input type="email" id="patientEmail" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-day"></i> Fecha preferente (opcional)</label>
+                            <input type="date" id="preferredDate">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-clock"></i> Hora preferente (opcional)</label>
+                            <input type="time" id="preferredTime">
+                        </div>
+                    </div>
+
+                    <!-- Total de la cotización -->
+                    <div class="total-cost-container">
+                        <div class="total-label">
+                            <i class="fas fa-calculator"></i> <strong>Total aproximado de la cotización:</strong>
+                        </div>
+                        <div class="total-amount" id="totalCostDisplay">$0.00</div>
+                        <div class="total-note">* Los precios incluyen IVA. Sujeto a cambios sin previo aviso.</div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-comment"></i> Comentarios adicionales</label>
+                        <textarea id="patientComments" rows="3" placeholder="Ej: indicaciones especiales, horario preferido, etc."></textarea>
+                    </div>
+                    <button type="submit" id="sendRequestBtn" class="btn-submit"><i class="fas fa-paper-plane"></i> Enviar solicitud</button> 
+
+
+                    <button type="button" id="downloadPdfBtn" class="btn-submit" style="background:#00BAB2;">
+                    <i class="fas fa-file-pdf"></i> Descargar cotización
+                    </button>
+
+                </form>
+                <div id="formMessage" class="form-message"></div>
+            </div>
+        </div>
+        <br></br>
+        <div class="info-note-box">
+            <i class="fas fa-info-circle"></i>
+            <span class="ext_cat">Para más estudios no listados en este catálogo, por favor comuníquese con el área de admisión</span>
+            <p id="ext_price">* Todos los precios incluyen IVA</p>
+        </div>
+    </div>
+
+    <footer>
+
+
+        <div class="info-footer">
+            <div class="health-license">
+                Responsable Sanitario: M.C. Salvador Ruiz<br>
+                Cédula Profesional: 12361082
+            </div>
+            <div class="phones-column">
+                <div class="phone">
+                    <i class="fa-solid fa-mobile-screen-button"></i> Llámenos al 55-52-32-30-49
+                </div>
+                <a href="https://wa.me/525535239723?text=Hola,%20me%20interesa%20información%20sobre%20los%20estudios%20del%20catálogo%20de%20Laboratorio%20MAC%20Santa%20Fe."
+                class="phone-2"
+                target="_blank"
+                rel="noopener noreferrer">
+                    <i class="fa-brands fa-whatsapp"></i> Mensaje al 55-35-23-97-23
+                </a>
+            </div>
+        </div>
+
+        <p><i class="fas fa-syringe"></i><b style="color: #a6f9bd; font-size: 20px;"> Laboratorio Clínico MAC Santa Fe · Excelencia diagnóstica </b></p>
+        <p>📋 Información basada en cartera autorizada para pacientes particulares externos</p>
+        <p>Precios sujetos a cambios sin previo aviso</p>
+
+        <div class="footer-address">
+            <a href="https://maps.app.goo.gl/FjtZ9HwTA3LbTcob9"
+            target="_blank"
+            rel="noopener noreferrer">
+                Avenida Vasco de Quiroga, No. 4973 Lado Sur, Santa Fe Cuajimalpa, C.P. Cuajimalpa de Morelos, Ciudad de México
+            </a>
+        </div>
+
+        <!-- Contenedor para los tres enlaces en línea -->
+        <div class="footer-links">
+            <a href="https://hospitalesmac.com/aviso-de-privacidad" target="_blank" class="privacy-link">
+                <i class="fas fa-shield-alt"></i> Aviso de Privacidad
+            </a>
+            <a href="https://hospitalesmac.com/terminos-y-condiciones" target="_blank" class="privacy-link">
+                <i class="fas fa-file-contract"></i> Términos y Condiciones
+            </a>
+            <a href="https://hospitalesmac.com/codigo-de-etica-y-conducta" target="_blank" class="privacy-link">
+                <i class="fas fa-handshake"></i> Código de Ética y Conducta
+            </a>
+        </div>
+    </footer>
+
+    <!-- Popup modal para detalles del estudio -->
+    <div class="overlay-popup" id="popupOverlay"></div>
+    <div id="testPopup" class="test-popup" style="display: none;">
+        <div class="popup-header">
+            <h3><i class="fas fa-flask"></i> <span id="popupTestName"></span></h3>
+            <button class="close-popup" id="closePopupBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="popup-body">
+            <div class="popup-section">
+                <strong><i class="fas fa-id-card"></i> Código ID</strong>
+                <p><span id="popupCatalogId" class="badge-id"></span></p>
+            </div>
+            <div class="popup-section" id="popupDescriptionSection">
+                <strong id="popupDescriptionTitle"><i class="fas fa-info-circle"></i> Descripción</strong>
+                <p id="popupDescription"></p>
+            </div>
+            <div class="popup-section">
+                <strong><i class="fas fa-dollar-sign"></i> Costo</strong>
+                <p><span id="popupCost" class="badge-id"></span></p>
+            </div>
+            <div class="popup-section">
+                <strong><i class="fas fa-list-alt"></i> Indicaciones para el paciente</strong>
+                <ul id="popupInstructions"></ul>
+            </div>
+            <div class="popup-section">
+                <strong><i class="fas fa-tint"></i> Tipo de muestra</strong>
+                <p id="popupSampleType"></p>
+            </div>
+        </div>
+        <div class="popup-footer">
+            <i class="fas fa-syringe"></i> Consulte siempre con su médico para la interpretación de los resultados.
+        </div>
+    </div>
+
+    <!-- Modal selector de estudios (para agregar al carrito) -->
+    <div id="studySelectorModal" class="modal-selector" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Seleccionar estudios</h3>
+                <button class="close-modal" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-filter-buttons">
+                    <button class="modal-filter-btn active" data-filter-type="individual">🔬 Estudios individuales</button>
+                    <button class="modal-filter-btn" data-filter-type="package">📦 Paquetes</button>
+                </div>
+                <input type="text" id="modalSearchInput" placeholder="🔎 Buscar estudio o paquete..." class="search-input-modal">
+                <div id="modalResultsList" class="modal-results"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="closeModalFooterBtn" class="btn-secondary">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="js/script.js"></script>
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>
+        // Inicializar EmailJS con tu Public Key
+        (function(){
+            emailjs.init("jRuo-TZkcjivxc-gj"); // Reemplazar con tu Public Key de EmailJS
+        })();
+    </script>
+    <script src="js/script.js"></script>
+
+    <!-- Botón flotante volver arriba -->
+    <button id="backToTopBtn" class="back-to-top" aria-label="Volver arriba">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <div id="pdfTemplate" style="position:absolute; left:-9999px; top:0; width:800px; background:white; padding:30px 25px 30px 25px; font-family:Inter;">
+
+    <!-- HEADER -->
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #A3C329; padding-bottom:8px;">
+        
+        <div>
+        <h2 style="margin:0; color:#1A5A52; font-size:30px;">Laboratorio MAC Santa Fe</h2>
+        <p style="margin:0; font-size:18px; color:#6b8c80;">Cotización de estudios clínicos</p>
+        </div>
+
+        <img src="media/img/logo_mac_bueno.png" style="width:110px;">
+    </div>
+
+    <!-- CLIENTE -->
+    <div style="margin-top:15px; background:#F0F7E8; padding:12px; border-radius:8px; font-size:18px;">
+        <p id="pdfNombre" style="margin:3px 0;"></p>
+        <p id="pdfTelefono" style="margin:3px 0;"></p>
+        <p id="pdfCorreo" style="margin:3px 0;"></p>
+        <p id="pdfFecha" style="margin:3px 0;"></p>
+    </div>
+
+    <!-- TABLA -->
+    <h3 style="margin-top:18px; color:#00BAB2; font-size:20px;">Detalle de estudios</h3>
+
+    <table style="width:100%; border-collapse: collapse; margin-top:8px; font-size:18px;">
+        
+        <thead>
+        <tr style="background:#A3C329; color:#1E2A1C;">
+            <th style="padding:8px; text-align:left;">Estudio</th>
+            <th style="padding:8px; text-align:right;">Precio</th>
+        </tr>
+        </thead>
+
+        <tbody id="pdfTableBody"></tbody>
+
+    </table>
+
+    <!-- TOTAL -->
+    <div style="margin-top:15px; text-align:right;">
+        <h2 style="color:#1A5A52; font-size:20px;" id="pdfTotal"></h2>
+    </div>  
+
+    <!-- QR -->
+
+    <div style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
+
+    <div>
+        <p style="font-size:18px; color:#1A5A52; font-weight:600; margin-bottom:4px;">
+        Contacto WhatsApp
+        </p>
+        <p style="font-size:16px; color:#6b8c80; margin:0;">
+        Escanea para atención directa
+        </p>
+    </div>
+
+    <img id="pdfQR" style="width:110px;">
+
+    </div>
+
+
+    <!-- FOOTER -->
+    <div style="margin-top:20px; border-top:1px solid #EAF0E4; padding-top:8px; font-size:16px; color:#577a6e;">
+        <p style="margin:2px 0;">📍 Av. Vasco de Quiroga 4973, Santa Fe, CDMX</p>
+        <p style="margin:2px 0;">📞 55-52-32-30-49</p>
+        <p style="margin:2px 0; font-weight:600;">Laboratorio Clínico MAC · Excelencia diagnóstica</p>
+    </div>
+
+    </div>
+
+
+
+</body>
+</html>
