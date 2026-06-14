@@ -13,9 +13,9 @@ body {
 }
 
 :root {
-    --primary: #A3C329;
-    --primary-dark: #8AAA1F;
-    --secondary: #00BAB2;
+    --primary: #719184;
+    --primary-dark: #04243d;
+    --secondary: #51b67a;
     --secondary-dark: #009e97;
     --gray-light: #F0F4EC;
     --card-bg: #FFFFFF;
@@ -25,7 +25,7 @@ body {
 
 /* ========== HERO ========== */
 .hero {
-    background: linear-gradient(15deg, #084a05 0%, #008D7B 100%);
+    background: linear-gradient(15deg, #04243d 0%, #51b67a 100%);
     color: white;
     padding: 2.5rem 1.5rem;
     text-align: center;
@@ -65,10 +65,10 @@ body {
 }
 .lab-logo {
     position: absolute;
-    top: 40%;
-    left: 20%;
+    top: 45%;
+    left: 18%;
     transform: translate(-50%, -50%);
-    width: 220px;
+    width: 20rem;
     height: auto;
 }
 .lab-logo_mobile {
