@@ -616,7 +616,7 @@
         let y = 20;
 
         doc.setFontSize(16);
-        doc.text("Laboratorio MAC Santa Fe", 20, y);
+        doc.text("Laboratorio Clínico CIELSA", 20, y);
         y += 10;
 
         doc.setFontSize(12);
@@ -649,7 +649,7 @@
         y += 5;
         doc.text(`Total: ${formatCost(calculateTotalCost())}`, 20, y);
 
-        doc.save("Cotizacion_Laboratorio_MAC.pdf");
+        doc.save("Cotizacion_Laboratorio_CIELSA.pdf");
     }
 
 
@@ -727,7 +727,7 @@
 
         // QR
         const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
-        encodeURIComponent("https://wa.me/525535239723?text=Hola,%20me%20interesa%20información%20sobre%20los%20estudios%20del%20catálogo%20de%20Laboratorio%20MAC%20Santa%20Fe.");
+        encodeURIComponent("https://wa.me/526141622447?text=Hola,%20me%20interesa%20información%20sobre%20los%20estudios%20de%20Laboratorio%20CIELSA.");
 
         document.getElementById("pdfQR").src = qrUrl;
 
@@ -792,7 +792,7 @@
             page++;
         }
 
-        pdf.save("Cotizacion_MAC_Santa_Fe.pdf");
+        pdf.save("Cotizacion_Laboratorio_CIELSA.pdf");
     }
 
 
