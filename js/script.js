@@ -605,194 +605,197 @@
 
 
 
-    function generarPDFCotizacion() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        const nombre = document.getElementById("patientName").value || "N/D";
-        const telefono = document.getElementById("patientPhone").value || "N/D";
-        const correo = document.getElementById("patientEmail").value || "N/D";
-
-        let y = 20;
-
-        doc.setFontSize(16);
-        doc.text("Laboratorio Clínico CIELSA", 20, y);
-        y += 10;
-
-        doc.setFontSize(12);
-        doc.text("Cotización de estudios", 20, y);
-        y += 10;
-
-        doc.text(`Nombre: ${nombre}`, 20, y);
-        y += 6;
-        doc.text(`Teléfono: ${telefono}`, 20, y);
-        y += 6;
-        doc.text(`Correo: ${correo}`, 20, y);
-        y += 10;
-
-        doc.text("Estudios solicitados:", 20, y);
-        y += 8;
-
-        selectedTests.forEach((test, index) => {
-            const details = getStudyDetails(test);
-            const costo = formatCost(details.cost);
-
-            doc.text(`${index + 1}. ${test} - ${costo}`, 20, y);
-            y += 6;
-
-            if (y > 280) {
-                doc.addPage();
-                y = 20;
-            }
-        });
-
-        y += 5;
-        doc.text(`Total: ${formatCost(calculateTotalCost())}`, 20, y);
-
-        doc.save("Cotizacion_Laboratorio_CIELSA.pdf");
-    }
 
 
 
-
-    const downloadBtn = document.getElementById("downloadPdfBtn");
-
-    if (downloadBtn) {
-        downloadBtn.addEventListener("click", function () {
-
-            if (selectedTests.length === 0) {
-
-                formMessage.innerHTML = `
-                <div style="color:#d9534f;">
-                Debe seleccionar al menos un estudio para descargar la cotización.
-                </div>`;
-
-                return;
-            }
-
-            generarPDFCotizacion();
-        });
-    }
-
-
+    // ========== GENERAR PDF CON html2canvas + jsPDF (RECORTE MANUAL) ==========
     async function generarPDFCotizacion() {
-        const { jsPDF } = window.jspdf;
+        // Validar que haya estudios seleccionados
+        if (selectedTests.length === 0) {
+            const formMessage = document.getElementById("formMessage");
+            if (formMessage) {
+                formMessage.innerHTML = `<div class="form-message error">Debe seleccionar al menos un estudio.</div>`;
+            }
+            return;
+        }
 
+        // Rellenar datos del cliente
         const nombre = document.getElementById("patientName").value || "N/D";
         const telefono = document.getElementById("patientPhone").value || "N/D";
         const correo = document.getElementById("patientEmail").value || "N/D";
         const fechaPref = document.getElementById("preferredDate").value || "No especificada";
         const horaPref = document.getElementById("preferredTime").value || "No especificada";
-
-        const fecha = new Date().toLocaleDateString();
+        const fechaActual = new Date().toLocaleDateString();
 
         document.getElementById("pdfNombre").innerHTML = `<strong>Nombre:</strong> ${nombre}`;
         document.getElementById("pdfTelefono").innerHTML = `<strong>Teléfono:</strong> ${telefono}`;
         document.getElementById("pdfCorreo").innerHTML = `<strong>Correo:</strong> ${correo}`;
-
         document.getElementById("pdfFecha").innerHTML = `
-            <strong>Fecha de solicitud:</strong> ${fecha}<br>
-            <strong>Fecha preferente:</strong> ${fechaPref}<br>
-            <strong>Hora preferente:</strong> ${horaPref}
+            <strong>Fecha:</strong> ${fechaActual}<br>
+            <strong>Fecha pref.:</strong> ${fechaPref}<br>
+            <strong>Hora pref.:</strong> ${horaPref}
         `;
 
+        // Generar filas de la tabla - CON PADDING REDUCIDO
         let rows = "";
-
-
-
         selectedTests.forEach((test, index) => {
             const details = getStudyDetails(test);
             const costo = formatCost(details.cost);
             const id = details.id || "N/D";
-
             rows += `
-            <tr style="page-break-inside: avoid;">
-                <td style="padding:10px; border-bottom:1px solid #EAF0E4;">
-                    ${index + 1}. ${test}
-                    <span style="font-size:10px; color:#6b8c80; margin-left:8px;">
-                        [ID: ${id}]
-                    </span>
-                </td>
-                <td style="padding:10px; text-align:right; border-bottom:1px solid #EAF0E4; font-weight:600; color:#00BAB2;">
-                    ${costo}
-                </td>
-            </tr>
+                <tr style="page-break-inside: avoid;">
+                    <td style="padding:3px 6px; border-bottom:1px solid #EAF0E4; font-size:12px;">
+                        ${index + 1}. ${test}
+                        <span style="font-size:9px; color:#72947c; margin-left:4px;">[ID: ${id}]</span>
+                    </td>
+                    <td style="padding:3px 6px; text-align:right; border-bottom:1px solid #EAF0E4; font-weight:600; color:#04243d; font-size:12px;">
+                        ${costo}
+                    </td>
+                </tr>
             `;
         });
-
-
-
         document.getElementById("pdfTableBody").innerHTML = rows;
         document.getElementById("pdfTotal").innerText = "TOTAL: " + formatCost(calculateTotalCost());
 
         // QR
-        const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
-        encodeURIComponent("https://wa.me/526141622447?text=Hola,%20me%20interesa%20información%20sobre%20los%20estudios%20de%20Laboratorio%20CIELSA.");
+        document.getElementById("pdfQR").src = "media/img/wpp_qr_no_back.png";
+        
+        //const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
+            //encodeURIComponent("https://wa.me/526141622447?text=Hola,%20me%20interesa%20información%20sobre%20los%20estudios%20de%20Laboratorio%20CIELSA.");
+        //document.getElementById("pdfQR").src = qrUrl;
 
-        document.getElementById("pdfQR").src = qrUrl;
 
-        const element = document.getElementById("pdfTemplate");
-
-        const canvas = await html2canvas(element, {
-            scale: 2,
-            useCORS: true
+        // Esperar a que cargue la imagen QR
+        await new Promise(resolve => {
+            const img = document.getElementById("pdfQR");
+            if (img.complete) resolve();
+            else img.onload = resolve;
         });
 
-        const pdf = new jsPDF("p", "mm", "a4");
-
-        const pageWidth = 210;
-        const pageHeight = 297;
-
-        const marginTop = 8;
-        const marginBottom = 20;
-        const marginLeft = 10;
-
-        const usableWidth = pageWidth - (marginLeft * 2);
-        const usableHeight = pageHeight - marginTop - marginBottom;
-
-        const ratio = usableWidth / canvas.width;
-
-        const pageCanvas = document.createElement("canvas");
-        const pageCtx = pageCanvas.getContext("2d");
-
-        const pageHeightPx = usableHeight / ratio;
-
-        let y = 0;
-        let page = 0;
-
-        while (y < canvas.height) {
-
-            pageCanvas.width = canvas.width;
-            pageCanvas.height = pageHeightPx;
-
-            pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
-
-            pageCtx.drawImage(
-                canvas,
-                0, y,
-                canvas.width, pageHeightPx,
-                0, 0,
-                canvas.width, pageHeightPx
-            );
-
-            const imgDataPage = pageCanvas.toDataURL("image/png");
-
-            if (page > 0) pdf.addPage();
-
-            pdf.addImage(
-                imgDataPage,
-                "PNG",
-                marginLeft,
-                marginTop,
-                usableWidth,
-                pageHeightPx * ratio
-            );
-
-            y += pageHeightPx;
-            page++;
+        const formMessage = document.getElementById("formMessage");
+        if (formMessage) {
+            formMessage.innerHTML = `<div class="form-message" style="background:#E3F0E9; color:#04243d;">Generando PDF, por favor espere...</div>`;
         }
 
-        pdf.save("Cotizacion_Laboratorio_CIELSA.pdf");
+        try {
+            const element = document.getElementById("pdfTemplate");
+
+            // Capturar el template completo con html2canvas
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                width: 750,
+                height: element.scrollHeight
+            });
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF("p", "mm", "letter");
+
+            const pageWidth = 215.9;  // Ancho carta en mm
+            const pageHeight = 279.4; // Alto carta en mm
+
+            // Márgenes ajustados para máximo aprovechamiento
+            const marginTop = 5;
+            const marginBottom = 10;
+            const marginLeft = 10;
+            const marginRight = 10;
+
+            const usableWidth = pageWidth - marginLeft - marginRight;
+            const usableHeight = pageHeight - marginTop - marginBottom;
+
+            const ratio = usableWidth / canvas.width;
+
+            // Altura en píxeles que cabe en una página
+            const pageHeightPx = usableHeight / ratio;
+
+            let y = 0;
+            let page = 0;
+
+            const pageCanvas = document.createElement("canvas");
+            const pageCtx = pageCanvas.getContext("2d");
+
+            while (y < canvas.height) {
+                // Calcular altura real para esta página (última página puede ser más pequeña)
+                let currentHeight = Math.min(pageHeightPx, canvas.height - y);
+                
+                pageCanvas.width = canvas.width;
+                pageCanvas.height = currentHeight;
+
+                pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+                pageCtx.drawImage(
+                    canvas,
+                    0, y,
+                    canvas.width, currentHeight,
+                    0, 0,
+                    canvas.width, currentHeight
+                );
+
+                const imgDataPage = pageCanvas.toDataURL("image/jpeg", 0.95);
+
+                if (page > 0) pdf.addPage();
+
+                pdf.addImage(
+                    imgDataPage,
+                    "JPEG",
+                    marginLeft,
+                    marginTop,
+                    usableWidth,
+                    currentHeight * ratio
+                );
+
+                y += currentHeight;
+                page++;
+            }
+
+            pdf.save("Cotizacion_Laboratorio_CIELSA.pdf");
+
+            if (formMessage) {
+                formMessage.innerHTML = `<div class="form-message success">PDF generado correctamente.</div>`;
+                setTimeout(() => {
+                    if (formMessage) formMessage.innerHTML = '';
+                }, 5000);
+            }
+        } catch (error) {
+            console.error('Error al generar PDF:', error);
+            if (formMessage) {
+                formMessage.innerHTML = `<div class="form-message error">Error al generar el PDF: ${error.message || 'Intente nuevamente.'}</div>`;
+            }
+        }
+    }
+
+
+
+    // Evento para el botón de descarga de PDF (con fallback)
+    const downloadBtn = document.getElementById("downloadPdfBtn");
+    if (downloadBtn) {
+        // Eliminar event listeners existentes para evitar duplicados
+        const newBtn = downloadBtn.cloneNode(true);
+        downloadBtn.parentNode.replaceChild(newBtn, downloadBtn);
+        
+        newBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            console.log('Botón clickeado - Estudios seleccionados:', selectedTests.length);
+            
+            if (selectedTests.length === 0) {
+                const formMessage = document.getElementById("formMessage");
+                if (formMessage) {
+                    formMessage.innerHTML = `<div class="form-message error">Debe seleccionar al menos un estudio para descargar la cotización.</div>`;
+                }
+                return;
+            }
+            
+            // Verificar que la función existe
+            if (typeof generarPDFCotizacion === 'function') {
+                generarPDFCotizacion();
+            } else {
+                console.error('La función generarPDFCotizacion no está definida');
+                const formMessage = document.getElementById("formMessage");
+                if (formMessage) {
+                    formMessage.innerHTML = `<div class="form-message error">Error: La función de generación de PDF no está disponible. Recargue la página.</div>`;
+                }
+            }
+        });
     }
 
 
@@ -800,8 +803,8 @@
     // EmailJS
     const appointmentForm = document.getElementById("appointmentForm");
     const formMessage = document.getElementById("formMessage");
-    const serviceID = 'service_n899ono';
-    const templateID = 'template_25vn2ml';
+    const serviceID = 'service_21ejumw';
+    const templateID = 'template_2xal1gj';
     if (appointmentForm) {
         appointmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();

@@ -111,9 +111,8 @@
                     </div>
                     <button type="submit" id="sendRequestBtn" class="btn-submit"><i class="fas fa-paper-plane"></i> Enviar solicitud</button> 
 
-
                     <button type="button" id="downloadPdfBtn" class="btn-submit" style="background:#00BAB2;">
-                    <i class="fas fa-file-pdf"></i> Descargar cotización
+                        <i class="fas fa-file-pdf"></i> Descargar cotización
                     </button>
 
                 </form>
@@ -233,92 +232,98 @@
     </div>
 
     <!-- Scripts -->
-
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="js/script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <!-- EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script>
         // Inicializar EmailJS con tu Public Key
         (function(){
-            emailjs.init("jRuo-TZkcjivxc-gj"); // Reemplazar con tu Public Key de EmailJS
+            emailjs.init("G_ptRTvvzugR78KmH");
         })();
     </script>
+
+    <!-- Tu script principal SIEMPRE al final -->
     <script src="js/script.js"></script>
+
+
 
     <!-- Botón flotante volver arriba -->
     <button id="backToTopBtn" class="back-to-top" aria-label="Volver arriba">
         <i class="fas fa-arrow-up"></i>
     </button>
 
-    <div id="pdfTemplate" style="position:absolute; left:-9999px; top:0; width:800px; background:white; padding:30px 25px 30px 25px; font-family:Inter;">
 
-    <!-- HEADER -->
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #A3C329; padding-bottom:8px;">
-        
-        <div>
-        <h2 style="margin:0; color:#1A5A52; font-size:30px;">Laboratorio Clínico CIELSA</h2>
-        <p style="margin:0; font-size:18px; color:#6b8c80;">Cotización de estudios clínicos</p>
+
+
+
+    <div id="pdfTemplate" style="position:absolute; left:-9999px; top:0; width:750px; background:white; padding:18px 18px 18px 18px; font-family:'Inter', system-ui, -apple-system, sans-serif;">
+
+        <!-- HEADER -->
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #53b779; padding-bottom:5px;">
+            <div>
+                <h2 style="margin:0; color:#04243d; font-size:22px; font-weight:800;">Laboratorio Clínico CIELSA</h2>
+                <p style="margin:0; font-size:13px; color:#72947c; font-weight:500;">Cotización de estudios clínicos</p>
+            </div>
+            <img src="media/img/banner_no_background.png" style="width:140px; height:auto;">
         </div>
 
-        <img src="media/img/banner_no_background.png" style="width:200px">
-    </div>
+        <!-- CLIENTE -->
+        <div style="margin-top:8px; margin-bottom:8px; background:#EDF3EF; padding:6px 10px; border-radius:6px; border-left:4px solid #53b779; page-break-after:avoid;">
+            <p id="pdfNombre" style="margin:1px 0; color:#04243d; font-weight:600; font-size:12px;"></p>
+            <p id="pdfTelefono" style="margin:1px 0; color:#2d4b44; font-size:12px;"></p>
+            <p id="pdfCorreo" style="margin:1px 0; color:#2d4b44; font-size:12px;"></p>
+            <p id="pdfFecha" style="margin:1px 0; color:#2d4b44; font-size:12px;"></p>
+        </div>
 
-    <!-- CLIENTE -->
-    <div style="margin-top:15px; background:#F0F7E8; padding:12px; border-radius:8px; font-size:18px;">
-        <p id="pdfNombre" style="margin:3px 0;"></p>
-        <p id="pdfTelefono" style="margin:3px 0;"></p>
-        <p id="pdfCorreo" style="margin:3px 0;"></p>
-        <p id="pdfFecha" style="margin:3px 0;"></p>
-    </div>
+        <!-- TABLA -->
+        <div style="page-break-after:avoid;">
+            <h3 style="margin-top:8px; color:#53b779; font-size:15px; font-weight:700; border-bottom:2px solid #EDF3EF; padding-bottom:3px;">Detalle de estudios</h3>
 
-    <!-- TABLA -->
-    <h3 style="margin-top:18px; color:#00BAB2; font-size:20px;">Detalle de estudios</h3>
+            <table style="width:100%; border-collapse: collapse; margin-top:4px; font-size:13px;">
+                <thead>
+                    <tr style="background:#53b779; color:white;">
+                        <th style="padding:4px 8px; text-align:left; border-radius:4px 0 0 4px; font-size:12px;">Estudio</th>
+                        <th style="padding:4px 8px; text-align:right; border-radius:0 4px 4px 0; font-size:12px;">Precio</th>
+                    </tr>
+                </thead>
+                <tbody id="pdfTableBody">
+                    <!-- Las filas se insertarán dinámicamente -->
+                </tbody>
+            </table>
+        </div>
 
-    <table style="width:100%; border-collapse: collapse; margin-top:8px; font-size:18px;">
-        
-        <thead>
-        <tr style="background:#A3C329; color:#1E2A1C;">
-            <th style="padding:8px; text-align:left;">Estudio</th>
-            <th style="padding:8px; text-align:right;">Precio</th>
-        </tr>
-        </thead>
+        <!-- TOTAL -->
+        <div style="margin-top:6px; margin-bottom:6px; text-align:right; background:#F7FAF8; padding:6px 10px; border-radius:6px; border:1px solid #E2EEE6; page-break-after:avoid;">
+            <h2 style="color:#04243d; font-size:17px; font-weight:800; margin:0;" id="pdfTotal"></h2>
+        </div>
 
-        <tbody id="pdfTableBody"></tbody>
+        <!-- QR -->
+        <div style="margin-top:5px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; background:#F7FAF8; padding:6px 12px; border-radius:6px; border:1px solid #E2EEE6; page-break-after:avoid;">
+            <div>
+                <p style="font-size:13px; color:#04243d; font-weight:700; margin-bottom:1px;">📱 Contacto WhatsApp</p>
+                <p style="font-size:11px; color:#72947c; margin:0; font-weight:500;">Escanea para atención directa</p>
+            </div>
+            <img id="pdfQR" style="max-width:80px; max-height:80px; width:auto; height:auto; border-radius:4px; border:2px solid #53b779; padding:2px; background:white; object-fit:contain;">
+        </div>
 
-    </table>
+        <!-- FOOTER -->
+        <div style="margin-top:5px; border-top:2px solid #53b779; padding-top:6px; font-size:11px; color:#72947c; background:#F7FAF8; padding:8px 12px 6px 12px; border-radius:0 0 6px 6px; page-break-before:avoid; page-break-after:avoid;">
+            <p style="margin:1px 0; display:flex; align-items:center; gap:4px; font-size:11px;">
+                <span style="font-size:12px;">📍</span> Av. de las Américas 2012, Panamericana, 31210 Chihuahua, Chihuahua.
+            </p>
+            <p style="margin:1px 0; display:flex; align-items:center; gap:4px; font-size:11px;">
+                <span style="font-size:12px;">📞</span> 614-603-89-30
+            </p>
+            <p style="margin:3px 0 0 0; font-weight:700; color:#04243d; font-size:12px; border-top:1px solid #EDF3EF; padding-top:4px;">
+                Laboratorio Clínico CIELSA · Excelencia diagnóstica
+            </p>
+        </div>
 
-    <!-- TOTAL -->
-    <div style="margin-top:15px; text-align:right;">
-        <h2 style="color:#1A5A52; font-size:20px;" id="pdfTotal"></h2>
-    </div>  
-
-    <!-- QR -->
-
-    <div style="margin-top:15px; display:flex; justify-content:space-between; align-items:center;">
-
-    <div>
-        <p style="font-size:18px; color:#1A5A52; font-weight:600; margin-bottom:4px;">
-        Contacto WhatsApp
-        </p>
-        <p style="font-size:16px; color:#6b8c80; margin:0;">
-        Escanea para atención directa
-        </p>
-    </div>
-
-    <img id="pdfQR" style="width:110px;">
-
-    </div>
-
-
-    <!-- FOOTER -->
-    <div style="margin-top:6rem; border-top:1px solid #EAF0E4; padding-top:10px; font-size:16px; color:#577a6e;">
-        <p style="margin:2px 0;">📍 Av. de las Américas 2012, Panamericana, 31210 Chihuahua, Chihuahua.</p>
-        <p style="margin:2px 0;">📞 614-603-89-30</p>
-        <p style="margin:2px 0; font-weight:600;">Laboratorio Clínico CIELSA · Excelencia diagnóstica</p>
-    </div>
+        <!-- ESPACIO EXTRA AL FINAL -->
+        <div style="height:15px;"></div>
 
     </div>
 
