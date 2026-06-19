@@ -609,12 +609,14 @@
 
 
     // ========== GENERAR PDF CON html2canvas + jsPDF (RECORTE MANUAL) ==========
-    async function generarPDFCotizacion() {
+    async function generarPDFCotizacion(silent = false) {
         // Validar que haya estudios seleccionados
         if (selectedTests.length === 0) {
-            const formMessage = document.getElementById("formMessage");
-            if (formMessage) {
-                formMessage.innerHTML = `<div class="form-message error">Debe seleccionar al menos un estudio.</div>`;
+            if (!silent) {
+                const formMessage = document.getElementById("formMessage");
+                if (formMessage) {
+                    formMessage.innerHTML = `<div class="form-message error">Debe seleccionar al menos un estudio.</div>`;
+                }
             }
             return;
         }
@@ -657,13 +659,8 @@
         document.getElementById("pdfTableBody").innerHTML = rows;
         document.getElementById("pdfTotal").innerText = "TOTAL: " + formatCost(calculateTotalCost());
 
-        // QR
+        // QR - Usando imagen local
         document.getElementById("pdfQR").src = "media/img/wpp_qr_no_back.png";
-        
-        //const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
-            //encodeURIComponent("https://wa.me/526141622447?text=Hola,%20me%20interesa%20información%20sobre%20los%20estudios%20de%20Laboratorio%20CIELSA.");
-        //document.getElementById("pdfQR").src = qrUrl;
-
 
         // Esperar a que cargue la imagen QR
         await new Promise(resolve => {
@@ -672,9 +669,12 @@
             else img.onload = resolve;
         });
 
-        const formMessage = document.getElementById("formMessage");
-        if (formMessage) {
-            formMessage.innerHTML = `<div class="form-message" style="background:#E3F0E9; color:#04243d;">Generando PDF, por favor espere...</div>`;
+        // Mostrar mensaje solo si no es silencioso
+        if (!silent) {
+            const formMessage = document.getElementById("formMessage");
+            if (formMessage) {
+                formMessage.innerHTML = `<div class="form-message" style="background:#E3F0E9; color:#04243d;">Generando PDF, por favor espere...</div>`;
+            }
         }
 
         try {
@@ -750,16 +750,26 @@
 
             pdf.save("Cotizacion_Laboratorio_CIELSA.pdf");
 
-            if (formMessage) {
-                formMessage.innerHTML = `<div class="form-message success">PDF generado correctamente.</div>`;
-                setTimeout(() => {
-                    if (formMessage) formMessage.innerHTML = '';
-                }, 5000);
+            // Solo mostrar mensaje si no es silencioso
+            if (!silent) {
+                const formMessage = document.getElementById("formMessage");
+                if (formMessage) {
+                    // No sobrescribir si ya hay un mensaje de éxito del correo
+                    if (!formMessage.innerHTML.includes('Solicitud enviada correctamente')) {
+                        formMessage.innerHTML = `<div class="form-message success">PDF generado correctamente.</div>`;
+                        setTimeout(() => {
+                            if (formMessage) formMessage.innerHTML = '';
+                        }, 5000);
+                    }
+                }
             }
         } catch (error) {
             console.error('Error al generar PDF:', error);
-            if (formMessage) {
-                formMessage.innerHTML = `<div class="form-message error">Error al generar el PDF: ${error.message || 'Intente nuevamente.'}</div>`;
+            if (!silent) {
+                const formMessage = document.getElementById("formMessage");
+                if (formMessage) {
+                    formMessage.innerHTML = `<div class="form-message error">Error al generar el PDF: ${error.message || 'Intente nuevamente.'}</div>`;
+                }
             }
         }
     }
@@ -805,28 +815,36 @@
     const formMessage = document.getElementById("formMessage");
     const serviceID = 'service_21ejumw';
     const templateID = 'template_2xal1gj';
+
     if (appointmentForm) {
         appointmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Validar campos
             let nombreRaw = document.getElementById("patientName").value.trim();
             let telefonoRaw = document.getElementById("patientPhone").value.trim();
             let correoRaw = document.getElementById("patientEmail").value.trim();
             let fechaPref = document.getElementById("preferredDate").value;
             let horaPref = document.getElementById("preferredTime").value;
             let comentarioRaw = document.getElementById("patientComments").value;
+            
             const limpiar = (str) => (str || "").replace(/[\n\r\t]+/g, ' ').trim();
             const nombre = limpiar(nombreRaw) || "No especificado";
             const telefono = limpiar(telefonoRaw) || "No especificado";
             const correo = limpiar(correoRaw) || "No especificado";
             const comentario = limpiar(comentarioRaw) || "Sin comentarios adicionales";
+            
             if (!nombre || nombre === "No especificado" || !telefono || telefono === "No especificado" || !correo || correo === "No especificado") {
                 formMessage.innerHTML = '<div class="form-message error">Por favor complete todos los campos obligatorios (*).</div>';
                 return;
             }
+            
             if (selectedTests.length === 0) {
                 formMessage.innerHTML = '<div class="form-message error">Debe seleccionar al menos un estudio.</div>';
                 return;
             }
+            
+            // Preparar datos
             const estudiosConPrecio = selectedTests.map((nombreEstudio, idx) => {
                 const details = getStudyDetails(nombreEstudio);
                 const id = details.id && details.id !== "N/D" ? details.id : "Sin ID";
@@ -834,22 +852,59 @@
                 const costoFormateado = formatCost(costo);
                 return `${idx+1}. [ID: ${id}] ${nombreEstudio} - ${costoFormateado}`;
             }).join('\n');
+            
             const horaClean = horaPref ? horaPref : "";
             const totalCotizacion = formatCost(calculateTotalCost());
-            const templateParams = { nombre, telefono, correo, estudios: estudiosConPrecio, comentario, fecha: fechaPref || "No especificada", hora: horaClean, total: totalCotizacion };
+            const templateParams = { 
+                nombre, 
+                telefono, 
+                correo, 
+                estudios: estudiosConPrecio, 
+                comentario, 
+                fecha: fechaPref || "No especificada", 
+                hora: horaClean, 
+                total: totalCotizacion 
+            };
+            
             const submitBtn = document.getElementById("sendRequestBtn");
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Enviando...';
             submitBtn.disabled = true;
+            
             try {
                 const response = await emailjs.send(serviceID, templateID, templateParams);
+                
                 if (response.status === 200) {
-                    generarPDFCotizacion();
-                    formMessage.innerHTML = '<div class="form-message success"><i class="fas fa-check-circle"></i> Solicitud enviada correctamente. En breve nos pondremos en contacto.</div>';
+                    // ✅ Mensaje de éxito del correo
+                    formMessage.innerHTML = '<div class="form-message success"><i class="fas fa-check-circle"></i> Solicitud enviada correctamente. Revisa tu bandeja de spam, en breve nos pondremos en contacto.</div>';
+                    
+                    // 🔥 El mensaje desaparecerá después de 15 segundos (opcional)
+                    setTimeout(() => {
+                        if (formMessage) {
+                            formMessage.style.transition = 'opacity 0.5s';
+                            formMessage.style.opacity = '0';
+                            setTimeout(() => {
+                                formMessage.innerHTML = '';
+                                formMessage.style.opacity = '1';
+                            }, 500);
+                        }
+                    }, 15000); // 15 segundos
+                    
+                    // Limpiar formulario
                     appointmentForm.reset();
                     selectedTests = [];
                     renderSelectedTestsList();
-                } else throw new Error('Error en el envío');
+                    updateTotalDisplay();
+                    
+                    // ✅ Generar PDF en segundo plano (SIN sobrescribir el mensaje)
+                    setTimeout(() => {
+                        generarPDFCotizacion(true);  // <--- ¡AÑADE "true" AQUÍ!
+                    }, 500);
+                    
+                } else {
+                    throw new Error('Error en el envío');
+                }
+                
             } catch (error) {
                 console.error('EmailJS error:', error);
                 formMessage.innerHTML = '<div class="form-message error"><i class="fas fa-exclamation-triangle"></i> Ocurrió un error al enviar. Por favor intente más tarde o contacte directamente por teléfono.</div>';
